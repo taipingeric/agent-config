@@ -3,15 +3,18 @@
 A Claude Code status line that shows:
 
 ```
-agent-config (main*) Opus 5.5 medium ctx ██░░░░░░░░ 18% 5h ██2h52m░░░ 72% wk ████████░░ 81% ↻Mon 06:00 [ELI5]
+agent-config (main*) +120 -30 Survivor 開發 Opus 5.5 medium ctx ██░░░░░░░░ 18% 5h ██2h52m░░░ 72% week ████████░░ 81% [ELI5]
 ```
 
-- Folder, git branch (`*` when there are uncommitted changes), model, effort
-- `ctx`: context **used**, colored green → light green → yellow → orange → red as it fills
+- Folder, git branch (a yellow `*` when there are uncommitted changes)
+- Lines added and removed this session (hidden while both are 0)
+- Session name, in italics (when the session has one)
+- Model, effort
+- `ctx`: context **used**, in soft colors from green to rose as it fills
 - `5h`: 5-hour limit **left**, with the time until it resets written inside the bar
-- `wk`: weekly limit **left**, with the reset day and time (`↻`)
-- `5h` and `wk` turn yellow, then red, as they run low
-- Output style in `[ ]`
+- `week`: weekly limit **left**
+- `5h` and `week` turn yellow, then red, as they run low
+- Output style in `[ ]`, in light gray
 
 Bars are drawn with background colors. Parts with no data yet (like the limits before the first reply) are left out.
 
@@ -30,8 +33,11 @@ curl -o ~/.claude/statusline.sh https://raw.githubusercontent.com/taipingeric/ag
 ```json
 "statusLine": {
   "type": "command",
-  "command": "bash ~/.claude/statusline.sh"
+  "command": "bash ~/.claude/statusline.sh",
+  "refreshInterval": 60
 }
 ```
+
+`refreshInterval` redraws it every 60 seconds, so the 5h countdown keeps moving while you're idle.
 
 It shows after your next message. If not, restart Claude Code.
