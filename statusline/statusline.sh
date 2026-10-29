@@ -34,13 +34,13 @@ level() {
   fi
 }
 
-# Context used, in five stages: green, lime, yellow, orange, red.
+# Context used, in five soft stages: green, olive, sand, clay, rose.
 ctx_level() {
-  if [ "$1" -lt 20 ]; then printf '\e[38;5;46m'
-  elif [ "$1" -lt 40 ]; then printf '\e[38;5;154m'
-  elif [ "$1" -lt 60 ]; then printf '\e[38;5;226m'
-  elif [ "$1" -lt 80 ]; then printf '\e[38;5;208m'
-  else printf '\e[38;5;196m'
+  if [ "$1" -lt 20 ]; then printf '\e[38;5;71m'
+  elif [ "$1" -lt 40 ]; then printf '\e[38;5;107m'
+  elif [ "$1" -lt 60 ]; then printf '\e[38;5;179m'
+  elif [ "$1" -lt 80 ]; then printf '\e[38;5;173m'
+  else printf '\e[38;5;167m'
   fi
 }
 
