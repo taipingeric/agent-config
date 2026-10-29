@@ -3,11 +3,17 @@
 A Claude Code status line that shows:
 
 ```
-agent-config (main) Opus 5.5 high 88% ctx left 81% wk left [ELI5]
+agent-config (main*) Opus 5.5 medium ctx ██░░░░░░░░ 18% 5h ██2h52m░░░ 72% wk ████████░░ 81% ↻Mon 06:00 [ELI5]
 ```
 
-Folder, git branch, model, effort, context left, weekly usage left, output style.
-Parts with no data yet (like weekly usage before the first reply) are left out.
+- Folder, git branch (`*` when there are uncommitted changes), model, effort
+- `ctx`: context **used**, colored green → light green → yellow → orange → red as it fills
+- `5h`: 5-hour limit **left**, with the time until it resets written inside the bar
+- `wk`: weekly limit **left**, with the reset day and time (`↻`)
+- `5h` and `wk` turn yellow, then red, as they run low
+- Output style in `[ ]`
+
+Bars are drawn with background colors. Parts with no data yet (like the limits before the first reply) are left out.
 
 ## Install
 
