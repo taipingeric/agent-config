@@ -24,3 +24,7 @@ From a shell:
 ```
 claude plugin install mods-panel --marketplace taipingeric/agent-config
 ```
+
+## Status line
+
+`statusline/` holds a status line script (folder, branch, model, effort, context left, weekly usage left, output style). It is not a mod: see [statusline/README.md](statusline/README.md) to install it.
