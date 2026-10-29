@@ -1,9 +1,9 @@
 #!/bin/bash
-# Status line: dir (branch*) +added -removed session model effort  ctx used  5h left (reset in)  week left  [output style]
+# Status line: dir (branch*) +added -removed (uncommitted) session model effort  ctx used  5h left (reset in)  week left  cache  [output style]
 input=$(cat)
 
 # One jq run reads every field, joined by the unit separator so empty ones keep their place.
-IFS=$'\x1f' read -r dir model effort ctx_left h5_used h5_reset wk_used style session added removed < <(
+IFS=$'\x1f' read -r dir model effort ctx_left h5_used h5_reset wk_used style session cache_warm cache_expires < <(
   echo "$input" | jq -r '
     def int: if . == null then "" else floor | tostring end;
     [ (.workspace.current_dir // .cwd // ""),
@@ -15,14 +15,17 @@ IFS=$'\x1f' read -r dir model effort ctx_left h5_used h5_reset wk_used style ses
       (.rate_limits.seven_day.used_percentage | int),
       (.output_style.name // ""),
       (.session_name // ""),
-      (.cost.total_lines_added | int),
-      (.cost.total_lines_removed | int)
+      (if .prompt_cache then .prompt_cache.warm | tostring else "" end),
+      (.prompt_cache.expires_at | int)
     ] | join("\u001f")'
 )
 
 branch=$(git -C "$dir" --no-optional-locks branch --show-current 2>/dev/null)
 if [ -n "$branch" ] && [ -n "$(git -C "$dir" --no-optional-locks status --porcelain 2>/dev/null | head -1)" ]; then
   dirty=1
+  # Uncommitted lines, staged or not, against the last commit.
+  read -r added removed < <(git -C "$dir" --no-optional-locks diff HEAD --numstat 2>/dev/null |
+    awk '{ a += $1; r += $2 } END { print a + 0, r + 0 }')
 fi
 
 reset=$'\e[0m'
@@ -77,7 +80,10 @@ until_time() {
   local s=$(( $1 - $(date +%s) ))
   [ "$s" -lt 0 ] && s=0
   local h=$((s / 3600)) m=$(((s % 3600) / 60))
-  if [ "$h" -gt 0 ]; then printf '%dh%02dm' "$h" "$m"; else printf '%dm' "$m"; fi
+  if [ "$h" -gt 0 ]; then printf '%dh%02dm' "$h" "$m"
+  elif [ "$m" -gt 0 ]; then printf '%dm' "$m"
+  else printf '<1m'
+  fi
 }
 
 # One limit: label, used %, reset epoch (its countdown is written inside the bar,
@@ -102,6 +108,12 @@ if [ -n "$ctx_left" ]; then
 fi
 [ -n "$h5_used" ] && line="$line $(limit 5h "$h5_used" "$h5_reset" "$bright_blue")"
 [ -n "$wk_used" ] && line="$line $(limit week "$wk_used" '' "$cyan")"
+# Prompt cache: time until it goes cold, or "cold".
+if [ "$cache_warm" = true ] && [ -n "$cache_expires" ] && [ "$cache_expires" -gt "$(date +%s)" ]; then
+  line="$line ${green}cache $(until_time "$cache_expires")${reset}"
+elif [ -n "$cache_warm" ]; then
+  line="$line ${light_gray}cache cold${reset}"
+fi
 [ -n "$style" ] && line="$line ${light_gray}[$style]${reset}"
 
 echo "$line"
