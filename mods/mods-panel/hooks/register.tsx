@@ -33,7 +33,6 @@ export const register: Register = on => {
       name: 'mods-panel',
       description: 'Open the pane that switches mods ON or OFF',
     })
-    applied = JSON.stringify([...(((await $.store.get('off')) ?? []) as string[])].sort())
 
     return next(e)
   })
@@ -66,8 +65,13 @@ export const register: Register = on => {
     const names = [...found].sort()
 
     const off = ((await $.store.get('off')) ?? []) as string[]
+    // ON first, then OFF; A to Z within each.
+    names.sort((a, b) => Number(off.includes(a)) - Number(off.includes(b)) || a.localeCompare(b))
     const { Box, Button, Text } = $.ui.resolve(e)
-    const isDirty = applied !== null && JSON.stringify([...off].sort()) !== applied
+    // The first draw after a load sees the list that load applied.
+    const current = JSON.stringify([...off].sort())
+    applied ??= current
+    const isDirty = current !== applied
     const offCount = names.filter(n => off.includes(n)).length
 
     return (
@@ -128,6 +132,26 @@ export const register: Register = on => {
             </Box>
           )
         })}
+        {isDirty && (
+          <Box marginTop={1}>
+            <Button
+              key="reload"
+              label="Reload plugins"
+              hotkey="r"
+              onPress={async () => {
+                try {
+                  await $.command.run({ command: 'reload-plugins' })
+                } catch {
+                  $.ui.toast('Could not reload: run /reload-plugins yourself.')
+                }
+              }}
+            >
+              <Text bold color="black" backgroundColor="#FFD60A">
+                {' ⟳ Reload plugins '}
+              </Text>
+            </Button>
+          </Box>
+        )}
       </Box>
     )
   })
