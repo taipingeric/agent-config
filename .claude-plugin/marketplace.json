@@ -1,0 +1,11 @@
+{
+  "name": "agent-config",
+  "owner": { "name": "taipingeric" },
+  "plugins": [
+    {
+      "name": "mods-panel",
+      "source": "./mods/mods-panel",
+      "description": "A panel (/mods-panel) with an ON/OFF toggle for every mod."
+    }
+  ]
+}

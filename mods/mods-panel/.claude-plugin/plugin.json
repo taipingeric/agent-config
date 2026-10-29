@@ -1,0 +1,1 @@
+{ "name": "mods-panel", "version": "0.1.0", "description": "A panel (/mods-panel) with an ON/OFF toggle for every mod. OFF mods are not loaded on the next reload or restart.", "types": "./types/index.d.ts" }
