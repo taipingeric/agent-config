@@ -17,6 +17,8 @@ agent-config (main*) +120 -30 Survivor 開發 Opus 5.5 medium ctx ██░░�
 - `cache`: time until the prompt cache goes cold (green), or `cache cold` (gray)
 - Output style in `[ ]`, in light gray
 
+When the line is wider than your terminal, it wraps onto more lines, never splitting a part in two. To force a width, set `STATUSLINE_WIDTH` (e.g. `"command": "STATUSLINE_WIDTH=100 bash ~/.claude/statusline.sh"`).
+
 Bars are drawn with background colors. Parts with no data yet (like the limits before the first reply) are left out.
 
 ## Install

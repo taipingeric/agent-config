@@ -94,26 +94,62 @@ limit() {
   printf '%s' "$(level "$2" "$4")$1 $(bar "$left" "$inside") ${left}%${reset}"
 }
 
-line="${bold_blue}$(basename "$dir")${reset}"
-[ -n "$branch" ] && line="$line ${green}($branch${dirty:+${yellow}*${green}})${reset}"
+# Segments, in order. The first one also carries the branch and diff counts.
+first="${bold_blue}$(basename "$dir")${reset}"
+[ -n "$branch" ] && first="$first ${green}($branch${dirty:+${yellow}*${green}})${reset}"
 if [ "${added:-0}" -gt 0 ] || [ "${removed:-0}" -gt 0 ]; then
-  line="$line ${green}+${added:-0}${reset} ${red}-${removed:-0}${reset}"
+  first="$first ${green}+${added:-0}${reset} ${red}-${removed:-0}${reset}"
 fi
-[ -n "$session" ] && line="$line ${sand_italic}$session${reset}"
-[ -n "$model" ] && line="$line ${orange}$model${reset}"
-[ -n "$effort" ] && line="$line ${magenta}$effort${reset}"
+segs=("$first")
+[ -n "$session" ] && segs+=("${sand_italic}$session${reset}")
+[ -n "$model" ] && segs+=("${orange}$model${reset}")
+[ -n "$effort" ] && segs+=("${magenta}$effort${reset}")
 if [ -n "$ctx_left" ]; then
   ctx_used=$((100 - ctx_left))
-  line="$line $(ctx_level "$ctx_used")ctx $(bar "$ctx_used") ${ctx_used}%${reset}"
+  segs+=("$(ctx_level "$ctx_used")ctx $(bar "$ctx_used") ${ctx_used}%${reset}")
 fi
-[ -n "$h5_used" ] && line="$line $(limit 5h "$h5_used" "$h5_reset" "$bright_blue")"
-[ -n "$wk_used" ] && line="$line $(limit week "$wk_used" '' "$cyan")"
+[ -n "$h5_used" ] && segs+=("$(limit 5h "$h5_used" "$h5_reset" "$bright_blue")")
+[ -n "$wk_used" ] && segs+=("$(limit week "$wk_used" '' "$cyan")")
 # Prompt cache: time until it goes cold, or "cold".
 if [ "$cache_warm" = true ] && [ -n "$cache_expires" ] && [ "$cache_expires" -gt "$(date +%s)" ]; then
-  line="$line ${green}cache $(until_time "$cache_expires")${reset}"
+  segs+=("${green}cache $(until_time "$cache_expires")${reset}")
 elif [ -n "$cache_warm" ]; then
-  line="$line ${light_gray}cache cold${reset}"
+  segs+=("${light_gray}cache cold${reset}")
 fi
-[ -n "$style" ] && line="$line ${light_gray}[$style]${reset}"
+[ -n "$style" ] && segs+=("${light_gray}[$style]${reset}")
 
+# Columns a segment takes on screen: color codes dropped, and each 3-byte
+# character (CJK) counted as two.
+width_of() {
+  local plain chars bytes
+  plain=$(printf '%s' "$1" | sed $'s/\e\[[0-9;]*m//g')
+  chars=${#plain}
+  bytes=$(printf '%s' "$plain" | LC_ALL=C wc -c | tr -d ' ')
+  printf '%d' $(( chars + (bytes - chars) / 2 ))
+}
+
+# Terminal width; STATUSLINE_WIDTH overrides it. The script has no terminal of
+# its own, so ask the one Claude Code (our parent) runs in.
+term_cols() {
+  local tty
+  tty=$(ps -o tty= -p "$PPID" 2>/dev/null | tr -d ' ')
+  case "$tty" in ''|'?'|'??') tty='' ;; *) tty=/dev/$tty ;; esac
+  { stty size <"${tty:-/dev/tty}"; } 2>/dev/null | awk '{ print $2 }'
+}
+cols=${STATUSLINE_WIDTH:-$(term_cols)}
+cols=${cols:-${COLUMNS:-0}}
+# Keep a few columns spare for Claude Code's own padding.
+max=$(( cols > 0 ? cols - 4 : 0 ))
+
+# Fill each line with segments; start a new line when the next one won't fit.
+line='' used=0
+for seg in "${segs[@]}"; do
+  w=$(width_of "$seg")
+  if [ -z "$line" ]; then line=$seg used=$w
+  elif [ "$max" -gt 0 ] && [ $((used + 1 + w)) -gt "$max" ]; then
+    echo "$line"
+    line=$seg used=$w
+  else line="$line $seg" used=$((used + 1 + w))
+  fi
+done
 echo "$line"
