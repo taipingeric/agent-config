@@ -28,23 +28,25 @@ if [ -n "$branch" ] && [ -n "$(git -C "$dir" --no-optional-locks status --porcel
     awk '{ a += $1; r += $2 } END { print a + 0, r + 0 }')
 fi
 
+# Fixed RGB values (iTerm2's default palette), not ANSI 31-37, so every terminal
+# shows the same colors whatever its theme.
 reset=$'\e[0m'
-bold_blue=$'\e[1;34m'
-green=$'\e[32m'
+bold_blue=$'\e[1;38;2;39;68;199m'
+green=$'\e[38;2;0;194;0m'
 orange=$'\e[38;2;217;119;87m'
-magenta=$'\e[35m'
-cyan=$'\e[36m'
-bright_blue=$'\e[94m'
-red=$'\e[31m'
-yellow=$'\e[33m'
+magenta=$'\e[38;2;192;64;190m'
+cyan=$'\e[38;2;0;197;199m'
+bright_blue=$'\e[38;2;167;171;242m'
+red=$'\e[38;2;180;60;42m'
+yellow=$'\e[38;2;199;196;0m'
 sand_italic=$'\e[3;38;5;180m'
 light_gray=$'\e[38;5;250m'
 
 # Under 50% used: the given color (green by default); under 80%: yellow; else red.
 level() {
-  if [ "$1" -lt 50 ]; then printf '%s' "${2:-$'\e[32m'}"
-  elif [ "$1" -lt 80 ]; then printf '\e[33m'
-  else printf '\e[31m'
+  if [ "$1" -lt 50 ]; then printf '%s' "${2:-$green}"
+  elif [ "$1" -lt 80 ]; then printf '%s' "$yellow"
+  else printf '%s' "$red"
   fi
 }
 
