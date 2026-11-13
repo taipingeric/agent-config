@@ -3,7 +3,7 @@
 A Claude Code status line that shows:
 
 ```
-agent-config (main*) +120 -30 Survivor 開發 Opus 5.5 medium ctx ██░░░░░░░░ 18% 5h ██2h52m░░░ 72% week ████████░░ 81% [ELI5]
+agent-config (main*) +120 -30 Survivor 開發 Opus 5.5 medium ctx ██░░░░░░░░ 18% 5h ██2h52m░░░ 72% week ████████░░ 81% fable ██████░░░░ 63% [ELI5]
 ```
 
 - Folder, git branch (a yellow `*` when there are uncommitted changes)
@@ -13,11 +13,16 @@ agent-config (main*) +120 -30 Survivor 開發 Opus 5.5 medium ctx ██░░�
 - `ctx`: context **used**, in soft colors from green to rose as it fills
 - `5h`: 5-hour limit **left**, with the time until it resets written inside the bar
 - `week`: weekly limit **left**
-- `5h` and `week` turn yellow, then red, as they run low
+- `fable`: Fable weekly limit **left** (see below)
+- `5h`, `week` and `fable` turn yellow, then red, as they run low
 - `cache`: time until the prompt cache goes cold (green), or `cache cold` (gray)
 - Output style in `[ ]`, in light gray
 
 When the line is wider than your terminal, it wraps onto more lines, never splitting a part in two. To force a width, set `STATUSLINE_WIDTH` (e.g. `"command": "STATUSLINE_WIDTH=100 bash ~/.claude/statusline.sh"`).
+
+### Fable limit
+
+Claude Code doesn't send the Fable limit to status lines. So the script asks Anthropic's usage API itself, with your Claude Code login (macOS Keychain, or `~/.claude/.credentials.json` on Linux). It asks at most every 5 minutes, in the background, and saves the answer to `~/.claude/cache/statusline-fable.json`. So the number can be up to ~5 minutes old. It needs `curl`, and it's hidden if your plan has no Fable limit.
 
 Bars are drawn with background colors. Parts with no data yet (like the limits before the first reply) are left out.
 

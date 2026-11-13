@@ -1,5 +1,5 @@
 #!/bin/bash
-# Status line: dir (branch*) +added -removed (uncommitted) session model effort  ctx used  5h left (reset in)  week left  cache  [output style]
+# Status line: dir (branch*) +added -removed (uncommitted) session model effort  ctx used  5h left (reset in)  week left  fable left  cache  [output style]
 input=$(cat)
 
 # One jq run reads every field, joined by the unit separator so empty ones keep their place.
@@ -39,6 +39,7 @@ cyan=$'\e[38;2;0;197;199m'
 bright_blue=$'\e[38;2;167;171;242m'
 red=$'\e[38;2;180;60;42m'
 yellow=$'\e[38;2;199;196;0m'
+lavender=$'\e[38;2;180;140;230m'
 sand_italic=$'\e[3;38;5;180m'
 light_gray=$'\e[38;5;250m'
 
@@ -112,6 +113,38 @@ if [ -n "$ctx_left" ]; then
 fi
 [ -n "$h5_used" ] && segs+=("$(limit 5h "$h5_used" "$h5_reset" "$bright_blue")")
 [ -n "$wk_used" ] && segs+=("$(limit week "$wk_used" '' "$cyan")")
+
+# Fable weekly limit. Claude Code doesn't pass it to the status line, so ask the
+# usage endpoint with your own login, at most every 5 minutes, in the background.
+# The line shows the last saved answer, so it never waits on the network.
+fable_cache="$HOME/.claude/cache/statusline-fable.json"
+fable_refresh() {
+  local creds tok
+  creds=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null ||
+    cat "$HOME/.claude/.credentials.json" 2>/dev/null)
+  tok=$(printf '%s' "$creds" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
+  [ -n "$tok" ] || return
+  curl -sf --max-time 5 https://api.anthropic.com/api/oauth/usage \
+    -H "Authorization: Bearer $tok" -H "anthropic-beta: oauth-2025-04-20" |
+    jq -c '[.limits[]? | select(.kind == "weekly_scoped"
+      and ((.scope.model.display_name // "") | ascii_downcase) == "fable")][0] // {}' \
+      >"$fable_cache.tmp" 2>/dev/null &&
+    [ -s "$fable_cache.tmp" ] && mv "$fable_cache.tmp" "$fable_cache"
+}
+if [ -z "$(find "$fable_cache" -mmin -5 2>/dev/null)" ]; then
+  mkdir -p "${fable_cache%/*}"
+  touch "$fable_cache" # marks the fetch as started, so the next redraws don't start another
+  (fable_refresh &) >/dev/null 2>&1
+fi
+read -r fb_used fb_reset < <(jq -r '
+  (.resets_at | if type == "string"
+     then (try (sub("\\.[0-9]+"; "") | sub("(\\+00:00)?$"; "Z") | sub("ZZ$"; "Z") | fromdateiso8601) catch null)
+     else . end) as $r
+  | if .percent == null then empty else "\(.percent | floor) \($r // 0 | floor)" end' "$fable_cache" 2>/dev/null)
+# Hide it once its week has reset, until a fresh answer comes in.
+if [ -n "$fb_used" ] && { [ "$fb_reset" = 0 ] || [ "$fb_reset" -gt "$(date +%s)" ]; }; then
+  segs+=("$(limit fable "$fb_used" '' "$lavender")")
+fi
 # Prompt cache: time until it goes cold, or "cold".
 if [ "$cache_warm" = true ] && [ -n "$cache_expires" ] && [ "$cache_expires" -gt "$(date +%s)" ]; then
   segs+=("${green}cache $(until_time "$cache_expires")${reset}")
