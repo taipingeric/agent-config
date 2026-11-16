@@ -1,0 +1,1 @@
+{ "name": "statusline", "version": "0.2.0", "description": "Runs statusline.sh from taipingeric/agent-config and shows its colored line above the prompt", "types": "./types/index.d.ts" }
