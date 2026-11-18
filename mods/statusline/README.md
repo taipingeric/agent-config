@@ -10,7 +10,6 @@ agent-config (main*) +120 -30 Opus 5.5 medium ctx ██░░░░░░░░
 
 - It feeds the script the folder, model, effort, context used, 5h and weekly limits, and output style.
 - It redraws after each tool call, after each reply step, and every 30 seconds.
-- The folder name's dark blue is drawn lighter, so it reads on a dark background.
 - Session name and prompt cache are left out: a mod can't read them.
 
 `bin/statusline.sh` is a copy of `statusline/statusline.sh`. Keep the two the same.

@@ -31,7 +31,7 @@ fi
 # Fixed RGB values (iTerm2's default palette), not ANSI 31-37, so every terminal
 # shows the same colors whatever its theme.
 reset=$'\e[0m'
-bold_blue=$'\e[1;38;2;39;68;199m'
+bold_blue=$'\e[1;38;2;120;150;255m'
 green=$'\e[38;2;0;194;0m'
 orange=$'\e[38;2;217;119;87m'
 magenta=$'\e[38;2;192;64;190m'

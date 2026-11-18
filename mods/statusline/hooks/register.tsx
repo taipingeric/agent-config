@@ -35,11 +35,6 @@ const xterm = (n: number) => {
   return `rgb(${g},${g},${g})`
 }
 
-// Colors too dark to read on the desktop's black, swapped for a lighter shade.
-const LIGHTER: Record<string, string> = {
-  'rgb(39,68,199)': 'rgb(120,150,255)', // folder name (bold blue)
-}
-
 // ANSI SGR text -> runs. Reverse video (the filled bar cells) is drawn as a
 // background in the current color, so the bars keep their look.
 const parse = (s: string): Run[] => {
@@ -80,7 +75,6 @@ const parse = (s: string): Run[] => {
         let color: string | undefined
         if (codes[i + 1] === 5) { color = xterm(codes[i + 2] ?? 0); i += 2 }
         else if (codes[i + 1] === 2) { color = `rgb(${codes[i + 2]},${codes[i + 3]},${codes[i + 4]})`; i += 4 }
-        if (color && LIGHTER[color]) color = LIGHTER[color]
         if (c === 38) fg = color
         else bg = color
       }
