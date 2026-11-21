@@ -38,16 +38,17 @@ magenta=$'\e[38;2;192;64;190m'
 cyan=$'\e[38;2;0;197;199m'
 bright_blue=$'\e[38;2;167;171;242m'
 red=$'\e[38;2;180;60;42m'
+bright_red=$'\e[38;2;255;85;85m'
 yellow=$'\e[38;2;199;196;0m'
 lavender=$'\e[38;2;180;140;230m'
 sand_italic=$'\e[3;38;5;180m'
 light_gray=$'\e[38;5;250m'
 
-# Under 50% used: the given color (green by default); under 80%: yellow; else red.
+# Under 50% used: the given color (green by default); under 80%: yellow; else bright red.
 level() {
   if [ "$1" -lt 50 ]; then printf '%s' "${2:-$green}"
   elif [ "$1" -lt 80 ]; then printf '%s' "$yellow"
-  else printf '%s' "$red"
+  else printf '%s' "$bright_red"
   fi
 }
 
